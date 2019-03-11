@@ -1,0 +1,35 @@
+{
+  "name": "1.0",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf build",
+    "prebuild": "npm run clean",
+    "build": "tsc",
+    "prestart": "npm run build",
+    "start": "node ./build/app/app.js",
+    "predev": "npm run clean",
+    "dev": "concurrently \"npm run tsc-watch\" \"npm run nodemon\"",
+    "prenodemon": "wait-on ./build/app/app.js",
+    "nodemon": "nodemon --delay 1500ms \"./build/app/app.js\"",
+    "tsc-watch": "tsc -w",
+    "lint": "tslint -c tslint.json \"./src/**/*.ts\"",
+    "debug": "node --inspect-brk=6264 dist/index.js",
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/selenium-webdriver": "^3.0.10",
+    "jes": "^0.6.1",
+    "selenium-webdriver": "^4.0.0-alpha.1",
+    "typescript": "^2.9.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.14",
+    "@types/node": "^10.5.2",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.5"
+  }
+}
