@@ -25,7 +25,7 @@ export class TestingUtil {
         return this.Configure(webpart, ...args);
     }
 
-    public async remove(webpart: AutoConfigurable, index: number = 0) {
+    public async remove() {
         var element = await (this.driver.findElement(By.xpath("//button[starts-with(@data-automation-id, 'deleteButton')]")));
         await element.click();
         await this.pause(1000);
