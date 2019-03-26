@@ -22,9 +22,12 @@
   "license": "ISC",
   "dependencies": {
     "@types/selenium-webdriver": "^3.0.10",
+    "add": "^2.0.6",
     "jes": "^0.6.1",
+    "jest-junit": "^6.3.0",
     "selenium-webdriver": "^4.0.0-alpha.1",
-    "typescript": "^2.9.2"
+    "typescript": "^2.9.2",
+    "yarn": "^1.13.0"
   },
   "devDependencies": {
     "@types/jest": "^23.3.14",

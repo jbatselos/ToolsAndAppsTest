@@ -37,28 +37,27 @@ it('waits for the driver to start', () => {
     })
 })
 
-it('can login to enviorment', async () => {await SetupEnviorment() })
-it('can set up a webpart', async () => { await TestWebpartSetup() })
-it('turn on user customization', async () => { await TestUserCustomization() })
-it('Targerting turns on when using Sharepoint data', async () => { await Targeting() })
-it('All Layouts exist', async () => { await Layouts() })
+it('Can login to enviorment', async () => {await SetupEnviorment() })
+it('Can set up a webpart', async () => { await TestWebpartSetup() })
+it('Can turn on user customization', async () => { await TestUserCustomization() })
+it('Targerting turns on when using Sharepoint data', async () => { await TestTargeting() })
+//it('Can load list from Sharepoint Site', async () => { await TestSharepointList() })
+//it('Can set item Limit', async () => { await TestItemLimit() })
+//it('Manage items can change order', async () => { await TestManageItems() })
+it('Layouts load correctly', async () => { await TestAllLayouts() })
 /*
-it('tests alerts Juliet rendering', async () => { await TestJulietRendering() })
-it('tests alerts Chicago rendering', async () => { await TestChicagoRendering() })
-it('can setup tools and apps', async () => { await TestToolsAppsWebpartSetup() })
-it('renders default mode', async () => { await TestTADefaultMode() })
-it('can click t&a buttons', async () => { await TestTAButtons() })
 it('can hide links', async () => { await TestTAUserCustomization() })
 it('renders list view mode', async () => { await TestListMode() })
 it('renders tabbed layout', async () => { await TestTabbedLayout() })
 it('doesn\'t break when removing all tiles from the tabbed layout', async () => { await TestRemovingAllLinks() })
 it('warns about illegal profile properties', async () => { await TestIllegalProfileProperty() })
 */
-//it('closes the driver', async () => { await driver.close() })
+it('closes the driver', async () => { await driver.close() })
 
 
 async function SetupEnviorment() {
     jest.setTimeout(60000);
+    await driver.manage().window().maximize();
     await (driver.get("https://owdevelop.sharepoint.com/sites/OWv2-Develop/SitePages/AutomatedTestPage.aspx"))
     await (timeout(300));
     await driver.findElement(By.name("loginfmt")).sendKeys("owdeveloper@owdevelop.onmicrosoft.com");
@@ -116,13 +115,13 @@ async function TestUserCustomization(){
 
     await cancel[2].click();
     //cancel again
-    
+    await timeout(500);
     await cancel[0].click();
     
     await remove();
 }
 
-async function Targeting() {
+async function TestTargeting() {
     let webpart = JSON.parse(JSON.stringify(defaultToolsApps));
     webpart.webPartData.properties.isUserTileCustomizationAllowed = true;
     //set up webpart
@@ -142,7 +141,7 @@ async function Targeting() {
     await switches[0].click();
 
     // see if Targeting tab appears
-    await timeout(1000);
+    await timeout(500);
     
     let targetTab = await driver.findElement(By.xpath('//*[@id="spPropertyPaneContainer"]/div/div/div[2]/div/div[2]/div/div[1]/div/div[4]/div/div/button/div'));
     var attrib = await (targetTab.getAttribute("class"));
@@ -152,7 +151,7 @@ async function Targeting() {
     await remove();
 }
 
-async function Layouts() {
+async function TestAllLayouts() {
     let webpart = JSON.parse(JSON.stringify(defaultToolsApps));
     webpart.webPartData.properties.isUserTileCustomizationAllowed = true;
     //set up webpart
@@ -375,7 +374,9 @@ async function SetupWebpartLocal(){
     var add = await driver.findElements(By.css('i[data-icon-name="Add"]'));
     await add[1].click();
     await timeout(1000);
+   
     await driver.findElement(By.css('button[data-automation-id="5fb28714-f831-431c-b5cb-6f24a558f522_0"]')).click();
+   
 }
 
 
@@ -406,17 +407,30 @@ async function remove() {
 }
 
 async function layoutTests( title: string, layout: string){
+    let lists = await driver.findElements(By.css('div[role="listbox"]'));
+    await lists[0].click();
+    await driver.findElement(By.css('button[title="List"]')).click();
+    await timeout(500);
+    await driver.findElement(By.css('button[data-automation-id="propertyPaneApplyButton"]')).click();
+    
+    
     //click on list
     await timeout(1000);
-    let lists = await driver.findElements(By.css('div[role="listbox"]'));
+    
     lists[1].click();
-    await timeout(1000);
+    await timeout(500);
     //click on certain layout
     let dataIndex = 'button[title="'+title+'"]';
     await driver.findElement(By.css(dataIndex)).click();
     //apply
     await driver.findElement(By.css('button[data-automation-id="propertyPaneApplyButton"]')).click();
-    await timeout(1000);
+    await timeout(500);
+
+    
+    await lists[0].click();
+    await driver.findElement(By.css('button[title="Tile"]')).click();
+    await timeout(500);
+    await driver.findElement(By.css('button[data-automation-id="propertyPaneApplyButton"]')).click();
 
     
     //check if results match
