@@ -45,13 +45,7 @@ it('Targerting turns on when using Sharepoint data', async () => { await TestTar
 //it('Can set item Limit', async () => { await TestItemLimit() })
 //it('Manage items can change order', async () => { await TestManageItems() })
 it('Layouts load correctly', async () => { await TestAllLayouts() })
-/*
-it('can hide links', async () => { await TestTAUserCustomization() })
-it('renders list view mode', async () => { await TestListMode() })
-it('renders tabbed layout', async () => { await TestTabbedLayout() })
-it('doesn\'t break when removing all tiles from the tabbed layout', async () => { await TestRemovingAllLinks() })
-it('warns about illegal profile properties', async () => { await TestIllegalProfileProperty() })
-*/
+it('discards changes', async () => { await DiscardChanges() })
 it('closes the driver', async () => { await driver.close() })
 
 
@@ -179,191 +173,33 @@ async function TestAllLayouts() {
     
 }
 
-async function TestJulietRendering() {
-    let webpart = JSON.parse(JSON.stringify(defaultAlerts));
-    webpart.webPartData.properties.style = "Juliet";
+async function TestSharepointList() {
+    
+    //set up webpart
     await SetupWebpartLocal();
+    //go to edit webpart
+        
+    let editButtons = await driver.findElements(By.css('button[aria-label="Edit web part"]'));
+    await editButtons[1].click();
+    await timeout(1000);
 
-    await testingUtil.togglePublishMode();
+    //go to Data
 
-    let alert = await driver.findElements(By.css("div[class^='alertViewMode'] > div"))
-    expect(await alert[0].getText()).toBe("Alert that is really important 1234");
-    let button = alert[1].findElement(By.css("a"))
-    expect(await button.getText()).toBe("Learn More");
-    expect(await button.getAttribute("href")).toBe("https://duckduckgo.com/");
-    takeScreenShot("AlertsJuliet");
-    await remove();
-}
+    await driver.findElement(By.xpath('//*[@id="spPropertyPaneContainer"]/div/div/div[2]/div/div[2]/div/div[1]/div/div[2]/div/div/button/div')).click();
 
-async function TestChicagoRendering() {
-    let webpart = JSON.parse(JSON.stringify(defaultAlerts));
-    webpart.webPartData.properties.style = "Chicago";
-    webpart.webPartData.properties.imageUrl = "http://icons.iconarchive.com/icons/graphicloads/100-flat/256/home-icon.png";
-    await SetupWebpartLocal();
+    //Switch to Manual Source
+    let switches = await driver.findElements(By.css('button[aria-checked="false"]'));   
+    await switches[0].click();
 
-    await testingUtil.togglePublishMode();
-    await timeout(standardWait);
+    await timeout(2500);
 
-    let alert = await driver.findElements(By.css("div[class^='alertViewMode'] > div"))
-    let alertContent = alert[0]
-    expect(await alertContent.findElement(By.css("div[class^='alertTextCell']")).getText()).toBe("Alert that is really important 1234");
-    let button = alertContent.findElement(By.css("a[class^='alertButtonCell']"))
-    expect(await button.getText()).toBe("Learn More");
-    expect(await button.getAttribute("href")).toBe("https://duckduckgo.com/");
+    //click lists
+    let arrows = await driver.findElement(By.css('div[class="Select is-clearable is-searchable Select--single"]'));
+    await arrows.click();
+    await timeout(1000);
+    let roles = await driver.findElements(By.css('div[class="Select-multi-value-wrapper"]'));
+    await roles[0].sendKeys("Tools And Apps");
 
-    let image = await alert[1].findElement(By.css("img"));
-    expect(await image.getAttribute("src")).toBe("http://icons.iconarchive.com/icons/graphicloads/100-flat/256/home-icon.png");
-    takeScreenShot("AlertsChicago");
-    await remove();
-}
-
-async function TestToolsAppsWebpartSetup() {
-    let webpart = JSON.parse(JSON.stringify(defaultToolsApps));
-    await SetupWebpartLocal();
-
-    var element = await (driver.findElement(By.xpath("//div[starts-with(@class, 'wsbThings')]")));
-    var attrib = await (element.getAttribute("class"));
-
-    expect(attrib).not.toBeNull;
-    await remove();
-}
-
-async function TestTADefaultMode() {
-    let webpart = JSON.parse(JSON.stringify(defaultToolsApps));
-    await SetupWebpartLocal();
-
-    let buttons = await (driver.findElements(By.css("div[class^='toolsAppsFlexContainer'] > a")));
-    let button = buttons[0];
-    expect(await button.getAttribute("href")).toBe("https://wsj.com/");
-    expect(await button.getAttribute("class")).toMatch(/tile_.*/);
-    expect(await button.findElement(By.css("h1")).getText()).toBe("Wallstreet Journal");
-    expect(await button.findElement(By.css("img")).getAttribute("src")).toBe("https://camo.githubusercontent.com/3288d22efd14f228d106509b2b1e0d7ca28ce4e9/687474703a2f2f73666572696b2e6769746875622e696f2f77736a2f69636f6e2e706e67");
-    takeScreenShot("ToolsAppsDefault");
-    await remove();
-}
-
-async function TestTAButtons() {
-    let webpart = JSON.parse(JSON.stringify(defaultToolsApps));
-    await SetupWebpartLocal();
-
-    let buttons = await (driver.findElements(By.css("div[class^='toolsAppsFlexContainer'] > a")));
-    let button = buttons[0];
-    await button.click();
-
-    await pageLoaded();
-    expect(await driver.getCurrentUrl()).toBe("https://www.wsj.com/");
-    await remove();
-}
-
-async function TestTAUserCustomization() {
-    await SetupWebpartLocal();
-
-
-    let buttonsContainer = await (driver.findElement(By.css("div[class^='toolsAppsFlexContainer']")));
-    let customizationButton = await buttonsContainer.findElement(By.css("button[class^='ms-Toggle-background']"));
-    await customizationButton.click();
-
-    let hideButtons = await buttonsContainer.findElements(By.css("div[class^='deleteButton'] i"));
-    expect(await hideButtons[0].getAttribute("data-icon-name")).toBe("RemoveFilter");
-    await hideButtons[0].click();
-    expect(await hideButtons[0].getAttribute("data-icon-name")).toBe("AddTo");
-
-    await customizationButton.click();
-    await (timeout(standardWait));
-    let updatedButtons = await (driver.findElements(By.css("div[class^='toolsAppsFlexContainer'] > a")));
-    let secondButton = updatedButtons[0]
-    expect(await secondButton.getAttribute("href")).toBe("https://cnn.com/");
-
-
-    takeScreenShot("ToolsAppsUserCustomization");
-    await remove();
-}
-
-async function TestListMode() {
-    let webpart = JSON.parse(JSON.stringify(defaultToolsApps));
-    webpart.webPartData.properties.viewMode = "list";
-    await SetupWebpartLocal();
-
-    let buttons = await (driver.findElements(By.css("div[class^='toolsAppsFlexContainer'] > a")));
-    let button = buttons[0];
-    expect(await button.getAttribute("href")).toBe("https://wsj.com/");
-    expect(await button.getAttribute("class")).toMatch(/list_.*/);
-    expect(await button.findElement(By.css("h1")).getText()).toBe("Wallstreet Journal");
-    expect(await button.findElement(By.css("img")).getAttribute("src")).toBe("https://camo.githubusercontent.com/3288d22efd14f228d106509b2b1e0d7ca28ce4e9/687474703a2f2f73666572696b2e6769746875622e696f2f77736a2f69636f6e2e706e67");
-    takeScreenShot("ToolsAppsListMode");
-    await remove();
-}
-
-async function TestTabbedLayout() {
-    let webpart = JSON.parse(JSON.stringify(defaultToolsApps));
-    webpart.webPartData.properties.layout = "tabbed";
-    await SetupWebpartLocal();
-
-    let bigContainer = await (driver.findElement(By.css("div[class^='wsbThings']")));
-
-    let button = await (bigContainer.findElement(By.css("div[class^='toolsAppsFlexContainer'] > a")));
-    expect(await button.getAttribute("href")).toBe("https://wsj.com/");
-    expect(await button.getAttribute("class")).toMatch(/tile_.*/);
-    expect(await button.findElement(By.css("h1")).getText()).toBe("Wallstreet Journal");
-    expect(await button.findElement(By.css("img")).getAttribute("src")).toBe("https://camo.githubusercontent.com/3288d22efd14f228d106509b2b1e0d7ca28ce4e9/687474703a2f2f73666572696b2e6769746875622e696f2f77736a2f69636f6e2e706e67");
-
-    let tabButtons = await bigContainer.findElements(By.css("div[role='presentation'] > ul > button"));
-    await tabButtons[1].click();
-
-    button = await (bigContainer.findElement(By.css("div[class^='toolsAppsFlexContainer'] > a")));
-    expect(await button.getAttribute("href")).toBe("https://cnn.com/");
-    expect(await button.getAttribute("class")).toMatch(/tile_.*/);
-    expect(await button.findElement(By.css("h1")).getText()).toBe("CNN");
-    expect(await button.findElement(By.css("img")).getAttribute("src")).toBe("http://media.idownloadblog.com/wp-content/uploads/2014/09/cnn-icon.png");
-    takeScreenShot("ToolsAppsTabbed");
-    await remove();
-}
-
-async function TestRemovingAllLinks() {
-    let webpart = JSON.parse(JSON.stringify(defaultToolsApps));
-    webpart.webPartData.properties.isUserTileCustomizationAllowed = true;
-    webpart.webPartData.properties.layout = "tabbed";
-    await SetupWebpartLocal();
-    let bigContainer = await (driver.findElement(By.css("div[class^='wsbThings']")));
-
-    let buttonsContainer = await (bigContainer.findElement(By.css("div[class^='toolsAppsFlexContainer']")));
-    let customizationButton = await buttonsContainer.findElement(By.css("button[class^='ms-Toggle-background']"));
-    await customizationButton.click();
-
-    let tabButtons = await bigContainer.findElements(By.css("div[role='presentation'] > ul > button"));
-    for (let tabButton of tabButtons) {
-        await tabButton.click();
-        let hideButton = await driver.findElement(By.css("div[class^='toolsAppsFlexContainer'] div[class^='deleteButton'] i"));
-        await hideButton.click();
-    }
-
-    customizationButton = await driver.findElement(By.css("div[class^='toolsAppsFlexContainer'] button[class^='ms-Toggle-background']"));
-    await customizationButton.click();
-
-    let updatedButtons = await (driver.findElements(By.css("div[class^='toolsAppsFlexContainer'] > a")));
-    expect(await updatedButtons).toEqual([]);
-    let tabButton = await bigContainer.findElement(By.css("div[role='presentation'] > ul > button span[class^='ms-Pivot-text']"));
-    expect(await tabButton.getText()).toBe("Uncategorized");
-    takeScreenShot("ToolsAppsNoLinks");
-    await remove();
-}
-
-async function TestIllegalProfileProperty() {
-    let webpart = JSON.parse(JSON.stringify(defaultToolsApps));
-    webpart.webPartData.properties.isUserTileCustomizationAllowed = true;
-    await SetupWebpartLocal();
-
-    let editButton = await driver.findElement(By.css("button[data-automation-id='configureButton']"));
-    await editButton.click();
-    await timeout(standardWait);
-    let layoutHeaderButton = await driver.findElement(By.xpath("//button[starts-with(@class, 'propertyPaneGroupHeader')]//div[contains(text(),'Layout')]"));
-    await layoutHeaderButton.click();
-    let propertyField = await driver.findElement(By.css("input[value='ToolsAppsCustomization']"));
-    await propertyField.sendKeys(Key.chord(Key.CONTROL, 'a'), "Title");
-    await timeout(standardWait);
-    let errorField = await driver.findElement(By.css("span[data-automation-id='error-message']"));
-    expect(await errorField.getText()).toBe("Prohibited: the property Title is a member of a built in group.");
-    takeScreenShot("ToolsAppsIllegalProfileProperty");
     await remove();
 }
 
@@ -389,6 +225,9 @@ function pageLoaded() {
     return new Promise(resolve => setTimeout(resolve, 2500));
 }
 async function DiscardChanges(){
+    await driver.findElement(By.css('button[data-automation-id="discardButton"]')).click();
+    await timeout(500);
+    await driver.findElement(By.css('button[data-automation-id="yesButton"]')).click();
 
 }
 async function takeScreenShot(fileName: string) {
