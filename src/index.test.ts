@@ -11,12 +11,6 @@ import {
 } from 'selenium-webdriver';
 import * as fs from 'fs';
 import { TestingUtil } from "./TestingUtil";
-import { WebpartMaker } from "./WebpartMaker";
-import { WatchIgnorePlugin } from 'webpack';
-import { delay } from 'bluebird';
-import symmetricDifferenceWith from 'ramda/es/symmetricDifferenceWith';
-
-
 
 
 jest.setTimeout(20000);
@@ -58,7 +52,6 @@ async function SetupEnviorment() {
     await driver.findElement(By.id("idSIButton9")).click();
     await (timeout(300));
     await driver.findElement(By.name("passwd")).sendKeys("&LEM3TF'wkNe4cCh");
-    
     await driver.findElement(By.id("idSIButton9")).click();
     await (timeout(300));
     await driver.findElement(By.id("idSIButton9")).click();
@@ -209,7 +202,7 @@ async function SetupWebpartLocal(){
     await timeout(1000);
     var add = await driver.findElements(By.css('i[data-icon-name="Add"]'));
     await add[1].click();
-    await timeout(1000);
+    await timeout(1500);
    
     await driver.findElement(By.css('button[data-automation-id="5fb28714-f831-431c-b5cb-6f24a558f522_0"]')).click();
    
